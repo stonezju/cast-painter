@@ -6,4 +6,193 @@
 	<title>Stone Cast Painter</title>
 </head>
 
+<body onload="start()">
+
+<canvas id="stage" width="1280" height="700">Does NOT support canvas!</canvas>
+
+    <script type="text/javascript" src="//www.gstatic.com/cast/sdk/libs/receiver/2.0.0/cast_receiver.js"></script>
+    <script type="text/javascript">
+
+      window.onload = function() {
+        cast.receiver.logger.setLevelValue(0);
+        window.castReceiverManager = cast.receiver.CastReceiverManager.getInstance();
+        console.log('Starting Receiver Manager');
+
+        // handler for the 'ready' event
+        castReceiverManager.onReady = function(event) {
+          console.log('Received Ready event: ' + JSON.stringify(event.data));
+          window.castReceiverManager.setApplicationState("Application status is ready...");
+        };
+
+        // handler for 'senderconnected' event
+        castReceiverManager.onSenderConnected = function(event) {
+          console.log('Received Sender Connected event: ' + event.data);
+          console.log(window.castReceiverManager.getSender(event.data).userAgent);
+        };
+
+        // handler for 'senderdisconnected' event
+        castReceiverManager.onSenderDisconnected = function(event) {
+          console.log('Received Sender Disconnected event: ' + event.data);
+          if (window.castReceiverManager.getSenders().length == 0) {
+	        window.close();
+	      }
+        };
+
+        // handler for 'systemvolumechanged' event
+        castReceiverManager.onSystemVolumeChanged = function(event) {
+          console.log('Received System Volume Changed event: ' + event.data['level'] + ' ' +
+              event.data['muted']);
+        };
+
+        // create a CastMessageBus to handle messages for a custom namespace
+        window.messageBus =
+          window.castReceiverManager.getCastMessageBus(
+              'urn:x-cast:stone-cast-painter');
+
+        // handler for the CastMessageBus message event
+        window.messageBus.onMessage = function(event) {
+          console.log('Message [' + event.senderId + ']: ' + event.data);
+          // inform all senders on the CastMessageBus of the incoming message event
+          // sender message listener will be invoked
+          window.messageBus.send(event.senderId, event.data);
+
+	  var cmdarr = event.data.split(":");
+	  // The command format will be as below,
+	  // point,x,y,col,width,:point,x,y,col,width:move,x,y,x,y,col,width: */
+	  for (var i = 0; i < cmdarr.length; i++) {
+		  if (cmdarr[i].indexOf("point") >= 0) {
+			  var arr;
+			  arr = cmdarr[i].split(",");
+			  // skip the first point befre ","
+			  drawPoint(arr[1], arr[2],arr[3],arr[4]);
+		  } else if (cmdarr[i].indexOf("move") >= 0) {
+			  var arr;
+			  arr = cmdarr[i].split(",");
+			  drawMove(arr[1], arr[2], arr[3], arr[4], arr[5], arr[6]);
+		  } else if (cmdarr[i].indexOf("text") >= 0) {
+			  var arr;
+			  arr = cmdarr[i].split(",");
+			  drawText(arr[1], arr[2], arr[3], arr[4], arr[5]);
+		  } else if (cmdarr[i].indexOf("clear") >= 0) {
+			  clearScreen();
+		  }
+	  }
+	  drawLogo();
+        }
+
+        // initialize the CastReceiverManager with an application status message
+        window.castReceiverManager.start({statusText: "Application is starting"});
+
+        console.log('Receiver Manager started');
+      };
+
+      // utility function to display the text message in the input field
+
+	function drawMove(ax, ay, bx, by, col, width) {
+		var c = document.getElementById("stage");
+		var cxt = c.getContext("2d");
+
+		// The position we get is based on 0.001.
+		var x = parseInt(ax) * c.width / 1000;
+		var y = parseInt(ay) * c.height / 1000;
+
+		//cxt.fillStyle = "#FFFFFF";
+		//cxt.fillStyle = "rgba(255,165,0,1)";
+		//cxt.strokeStyle = "rgba(255,165,0,1)";
+		cxt.fillStyle = getColor(col);
+		cxt.strokeStyle = getColor(col);
+		cxt.lineWidth = width;
+
+		cxt.beginPath();
+		cxt.moveTo(x, y);
+
+		x = parseInt(bx) * c.width / 1000;
+		y = parseInt(by) * c.height / 1000;
+
+		cxt.lineTo(x, y);
+		cxt.stroke();
+
+		drawPoint(ax, ay, col, width);
+		drawPoint(bx, by, col, width);
+	};
+
+	function drawPoint(ax, ay, col, width) {
+		var c = document.getElementById("stage");
+		var cxt = c.getContext("2d");
+
+		var x = parseInt(ax) * c.width / 1000;
+		var y = parseInt(ay) * c.height / 1000;
+
+		//cxt.fillStyle = "#FFFFFF";
+		//cxt.fillStyle = "rgba(255,165,0,1)";;
+		//cxt.strokeStyle = "rgba(255,165,0,1)";;
+		cxt.fillStyle = getColor(col);
+		cxt.strokeStyle = getColor(col);
+
+		cxt.beginPath();
+		cxt.arc(x, y, width / 2, 0, Math.PI * 2, true);
+		cxt.closePath();
+		cxt.fill();
+	};
+
+	function drawLogo() {
+		//drawText("Stone", 20, 910, 1, 20);
+		drawText("Cast", 20, 940, 6, 20);
+		drawText("Painter", 20, 970, 3, 20);
+	}
+
+	function drawText(text, ax, ay, col, size) {
+		var c = document.getElementById("stage");
+		var cxt=c.getContext("2d");
+
+		var x = parseInt(ax) * c.width / 1000;
+		var y = parseInt(ay) * c.height / 1000;
+
+		cxt.font = size + "pt Arial";
+		cxt.fillStyle = getColor(col);
+		cxt.fillText(text, x, y);
+	}
+
+	function clearScreen() {
+		var c = document.getElementById("stage");
+		var cxt = c.getContext("2d");
+		cxt.clearRect(0, 0, c.width, c.height);
+
+        	console.log('Clear screen');
+	}
+
+	function getColor(col) {
+		/* color table
+		 * 0 == WHITE
+		 * 1 == BLUE
+		 * 2 == LIGHT BLUE == CYAN
+		 * 3 == GREEN
+		 * 4 == PINK == MAGENTA
+		 * 5 == RED
+		 * 6 == YELLOW
+		 * 7 == BLACK
+		 */
+		/*
+		var color = new Array(
+				"rgb(255, 255, 255)",
+				"rgb(37, 115, 236)",
+				"rgb(173, 216, 230)",
+				"rgb(120, 186, 0)",
+				"rgb(255, 192, 203)",
+				"rgb(174, 17, 61)",
+				"rgb(244, 179, 0)",
+				"rgb(37, 37, 37)");
+				*/
+		var color = new Array(
+				"white", "blue", "cyan", "green", "pink", "red", "yellow", "black");
+		if (col >= 0 && col <= 7)
+			return color[col];
+		else
+			return color[0];
+	}
+
+    </script>
+
+</body>
+
 </html>
