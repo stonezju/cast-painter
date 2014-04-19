@@ -8,7 +8,7 @@
 
 <body onload="start()">
 
-<canvas id="stage" width="1280" height="700">Does NOT support canvas!</canvas>
+<canvas id="stage" width="1200" height="680">Does NOT support canvas!</canvas>
 
     <script type="text/javascript" src="//www.gstatic.com/cast/sdk/libs/receiver/2.0.0/cast_receiver.js"></script>
     <script type="text/javascript">
@@ -83,6 +83,7 @@
         // initialize the CastReceiverManager with an application status message
         window.castReceiverManager.start({statusText: "Application is starting"});
 
+	drawLogo();
         console.log('Receiver Manager started');
       };
 
