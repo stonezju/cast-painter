@@ -73,6 +73,10 @@
 			  var arr;
 			  arr = cmdarr[i].split(",");
 			  drawText(arr[1], arr[2], arr[3], arr[4], arr[5]);
+		  } else if (cmdarr[i].indexOf("image") >= 0) {
+			  var arr;
+			  arr = cmdarr[i].split(",");
+			  drawImage(arr[1]);
 		  } else if (cmdarr[i].indexOf("clear") >= 0) {
 			  clearScreen();
 		  }
@@ -152,6 +156,19 @@
 		cxt.font = size + "pt Arial";
 		cxt.fillStyle = getColor(col);
 		cxt.fillText(text, x, y);
+	}
+
+	function drawImage(url) {
+		var c = document.getElementById('stage');
+		var cxt = c.getContext('2d');
+		var imageObj = new Image();
+
+		imageObj.onload = function() {
+			cxt.drawImage(imageObj, 0, 0, c.width, c.height);
+		};
+		//imageObj.src = 'http://www.html5canvastutorials.com/demos/assets/darth-vader.jpg';
+		//imageObj.src = 'http://www.gogocn.com/admin/map/map_china.jpg';
+		imageObj.src = 'http://' + url;
 	}
 
 	function clearScreen() {
