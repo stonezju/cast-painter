@@ -76,7 +76,7 @@
 		  } else if (cmdarr[i].indexOf("image") >= 0) {
 			  var arr;
 			  arr = cmdarr[i].split(",");
-			  drawImage(arr[1]);
+			  drawImage(arr[1],arr[2],arr[3]);
 		  } else if (cmdarr[i].indexOf("clear") >= 0) {
 			  clearScreen();
 		  }
@@ -158,7 +158,7 @@
 		cxt.fillText(text, x, y);
 	}
 
-	function drawImage(url) {
+	function drawImage(http, url, port) {
 		var c = document.getElementById('stage');
 		var cxt = c.getContext('2d');
 		var imageObj = new Image();
@@ -166,9 +166,7 @@
 		imageObj.onload = function() {
 			cxt.drawImage(imageObj, 0, 0, c.width, c.height);
 		};
-		//imageObj.src = 'http://www.html5canvastutorials.com/demos/assets/darth-vader.jpg';
-		//imageObj.src = 'http://www.gogocn.com/admin/map/map_china.jpg';
-		imageObj.src = 'http://' + url;
+		imageObj.src = http + '://' + url + ':' + port;
 	}
 
 	function clearScreen() {
